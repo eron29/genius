@@ -20,7 +20,7 @@ CONFIG_MODELOS = {
         'cria_chat': lambda modelo, api_key: ChatOpenAI(model=modelo, api_key=api_key),
     },
     'Gemini': {
-        'modelos': ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+        'modelos': ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
         'cria_chat': lambda modelo, api_key: ChatGoogleGenerativeAI(model=modelo, google_api_key=api_key),
     },
 }
