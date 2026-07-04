@@ -4,6 +4,7 @@ import tempfile
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from loaders import carrega_site, carrega_youtube, carrega_pdf, carrega_csv, carrega_txt
 
@@ -12,11 +13,15 @@ TIPOS_ARQUIVOS_VALIDOS = ['Site', 'Youtube', 'Pdf', 'Csv', 'Txt']
 CONFIG_MODELOS = {
     'Groq': {
         'modelos': ['llama-3.1-70b-versatile', 'gemma2-9b-it', 'mixtral-8x7b-32768'],
-        'chat': ChatGroq,
+        'cria_chat': lambda modelo, api_key: ChatGroq(model=modelo, api_key=api_key),
     },
     'OpenAI': {
         'modelos': ['gpt-4o-mini', 'gpt-4o', 'o1-preview', 'o1-mini'],
-        'chat': ChatOpenAI,
+        'cria_chat': lambda modelo, api_key: ChatOpenAI(model=modelo, api_key=api_key),
+    },
+    'Gemini': {
+        'modelos': ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'],
+        'cria_chat': lambda modelo, api_key: ChatGoogleGenerativeAI(model=modelo, google_api_key=api_key),
     },
 }
 
@@ -71,5 +76,5 @@ def monta_chain(provedor, modelo, api_key, tipo_arquivo, arquivo):
         ('placeholder', '{chat_history}'),
         ('user', '{input}'),
     ])
-    chat = CONFIG_MODELOS[provedor]['chat'](model=modelo, api_key=api_key)
+    chat = CONFIG_MODELOS[provedor]['cria_chat'](modelo, api_key)
     return template | chat

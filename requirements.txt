@@ -3,6 +3,7 @@ langchain-core>=0.3
 langchain-community>=0.3
 langchain-groq>=0.2
 langchain-openai>=0.2
+langchain-google-genai
 beautifulsoup4>=4.12
 pypdf>=5.0
 fake_useragent>=1.5
