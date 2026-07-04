@@ -39,14 +39,39 @@ def pagina_chat():
         st.session_state['historico'] = historico
 
 
-def _valor_padrao_api_key(provedor):
-    chave_sessao = f'api_key_{provedor}'
-    if chave_sessao in st.session_state:
-        return st.session_state[chave_sessao]
+def _obter_secret(chave):
     try:
-        return st.secrets.get(f'{provedor.upper()}_API_KEY', '')
+        return st.secrets.get(chave)
     except Exception:
-        return ''
+        return None
+
+
+def _provedor_e_modelo_configurados():
+    provedor = _obter_secret('PROVEDOR')
+    if not provedor or provedor not in CONFIG_MODELOS:
+        st.error(
+            'Defina PROVEDOR (Groq ou OpenAI) em App settings > Secrets.'
+        )
+        st.stop()
+
+    modelo = _obter_secret('MODELO')
+    if not modelo or modelo not in CONFIG_MODELOS[provedor]['modelos']:
+        st.error(
+            f"Defina MODELO em App settings > Secrets com um dos valores: "
+            f"{', '.join(CONFIG_MODELOS[provedor]['modelos'])}."
+        )
+        st.stop()
+
+    return provedor, modelo
+
+
+def _api_key_configurada(provedor):
+    chave_secret = f'{provedor.upper()}_API_KEY'
+    api_key = _obter_secret(chave_secret)
+    if not api_key:
+        st.error(f'Defina {chave_secret} em App settings > Secrets.')
+        st.stop()
+    return api_key
 
 
 def sidebar():
@@ -67,21 +92,16 @@ def sidebar():
             arquivo = st.file_uploader('Faça o upload do arquivo txt', type=['txt'])
 
     with tabs[1]:
-        provedor = st.selectbox('Selecione o provedor do modelo', list(CONFIG_MODELOS.keys()))
-        modelo = st.selectbox('Selecione o modelo', CONFIG_MODELOS[provedor]['modelos'])
-        api_key = st.text_input(
-            f'Adicione a api key para o provedor {provedor}',
-            value=_valor_padrao_api_key(provedor),
-            type='password',
-        )
-        st.session_state[f'api_key_{provedor}'] = api_key
+        provedor, modelo = _provedor_e_modelo_configurados()
+        st.write(f'**Provedor:** {provedor}')
+        st.write(f'**Modelo:** {modelo}')
+        st.caption('Provedor, modelo e api key vêm de App settings > Secrets.')
 
     if st.button('Inicializar Genius', use_container_width=True):
         if not arquivo:
             st.warning('Selecione ou envie um arquivo antes de inicializar.')
-        elif not api_key:
-            st.warning('Informe a api key do provedor selecionado.')
         else:
+            api_key = _api_key_configurada(provedor)
             with st.spinner('Carregando o Genius...'):
                 st.session_state['chain'] = monta_chain(provedor, modelo, api_key, tipo_arquivo, arquivo)
             st.success('Genius inicializado com sucesso!')
